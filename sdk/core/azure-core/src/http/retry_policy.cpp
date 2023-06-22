@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <limits>
+#include <random>
 #include <sstream>
 #include <thread>
 #include <cstdlib>
@@ -73,10 +74,9 @@ std::chrono::milliseconds CalculateExponentialDelay(
 {
   if (jitterFactor < 0.8 || jitterFactor > 1.3)
   {
-    double rand;
-    static drand48_data buf;
-    srand48_r(time(NULL), &buf);
-    drand48_r(&buf, &rand);
+    std::minstd_rand rng((std::minstd_rand::result_type)time(nullptr)); /// a fast rng with bad quality is okay here
+    std::uniform_real_distribution<> distr(0.0, 1.0);
+    double rand = distr(rng);
 
     // jitterFactor is a random double number in the range [0.8 .. 1.3]
     jitterFactor = 0.8 + rand * 0.5;
