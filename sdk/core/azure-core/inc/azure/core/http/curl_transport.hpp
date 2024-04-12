@@ -76,6 +76,14 @@ namespace Azure { namespace Core { namespace Http {
    */
   struct CurlTransportOptions
   {
+    /// Copied from curl.cpp to avoid dependencies.
+    enum CurlOptIPResolve
+    {
+      CURL_IPRESOLVE_WHATEVER = 0, /* default, uses addresses to all IP versions that your system allows */
+      CURL_IPRESOLVE_V4 = 1, /* uses only IPv4 addresses/connections */
+      CURL_IPRESOLVE_V6 = 2, /* uses only IPv6 addresses/connections */
+    };
+
     /**
      * @brief The string for the proxy is passed directly to the libcurl handle without any parsing.
      *
@@ -179,6 +187,11 @@ namespace Azure { namespace Core { namespace Http {
      *
      */
     bool NoSignal = false;
+
+    /**
+     * @brief Sets option CURLOPT_IPRESOLVE in libcurl.
+     */
+    int IPResolve = CURL_IPRESOLVE_WHATEVER;
 
     /**
      * @brief Contain the maximum time that you allow the connection phase to the server to take.
