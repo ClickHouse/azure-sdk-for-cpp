@@ -70,4 +70,7 @@ namespace Azure { namespace Storage { namespace _internal {
     std::unique_ptr<XmlWriterContext> m_context;
   };
 
+  void XmlGlobalInitialize();
+  void XmlGlobalDeinitialize();
+
 }}} // namespace Azure::Storage::_internal
