@@ -82,8 +82,7 @@ Azure::Core::Url HttpSanitizer::SanitizeUrl(Azure::Core::Url const& url) const
   return Azure::Core::Url(ss.str());
 }
 
-std::string HttpSanitizer::SanitizeHeader(std::string const& header, std::string const& value) const
+std::string HttpSanitizer::SanitizeHeader(std::string const&, std::string const& value) const
 {
-  return (m_allowedHttpHeaders.find(header) != m_allowedHttpHeaders.end()) ? value
-                                                                           : RedactedPlaceholder;
+  return value;
 }
