@@ -4,6 +4,7 @@
 #include "azure/storage/common/crypt.hpp"
 
 #include <azure/core/platform.hpp>
+#include <openssl/core_names.h>
 
 #if defined(AZ_PLATFORM_WINDOWS)
 #if !defined(NOMINMAX)
@@ -207,15 +208,27 @@ namespace Azure { namespace Storage {
         const std::vector<uint8_t>& key)
     {
       uint8_t hash[EVP_MAX_MD_SIZE];
-      unsigned int hashLength = 0;
-      HMAC(
-          EVP_sha256(),
-          key.data(),
-          static_cast<int>(key.size()),
-          reinterpret_cast<const unsigned char*>(data.data()),
-          data.size(),
-          reinterpret_cast<unsigned char*>(&hash[0]),
-          &hashLength);
+      size_t hashLength = 0;
+
+      // HMAC(
+      //     EVP_sha256(),
+      //     key.data(),
+      //     static_cast<int>(key.size()),
+      //     reinterpret_cast<const unsigned char*>(data.data()),
+      //     data.size(),
+      //     reinterpret_cast<unsigned char*>(&hash[0]),
+      //     &hashLength);
+    EVP_MAC * mac = EVP_MAC_fetch(nullptr, "HMAC", nullptr);
+    EVP_MAC_CTX * ctx = EVP_MAC_CTX_new(mac);
+
+    OSSL_PARAM params[] = {
+        OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST, "SHA256", 0),
+        OSSL_PARAM_construct_end()
+    };
+
+    int init = EVP_MAC_init(ctx, key.data(), key.size(), params);
+    int update = EVP_MAC_update(ctx, data.data(), data.size());
+    int final = EVP_MAC_final(ctx, hash, &hashLength, EVP_MAX_MD_SIZE);
 
       return std::vector<uint8_t>(std::begin(hash), std::begin(hash) + hashLength);
     }
