@@ -1392,6 +1392,7 @@ namespace Azure { namespace Storage { namespace Blobs {
     {
       auto request = Core::Http::Request(Core::Http::HttpMethod::Put, url);
       request.GetUrl().AppendQueryParameter("restype", "container");
+      request.SetHeader("Content-Length", "0");
       for (const auto& p : options.Metadata)
       {
         request.SetHeader("x-ms-meta-" + p.first, p.second);
@@ -4960,6 +4961,7 @@ namespace Azure { namespace Storage { namespace Blobs {
         const Core::Context& context)
     {
       auto request = Core::Http::Request(Core::Http::HttpMethod::Put, url);
+      request.SetHeader("Content-Length", "0");
       if (options.SourceLeaseId.HasValue() && !options.SourceLeaseId.Value().empty())
       {
         request.SetHeader("x-ms-source-lease-id", options.SourceLeaseId.Value());
@@ -5092,6 +5094,7 @@ namespace Azure { namespace Storage { namespace Blobs {
     {
       auto request = Core::Http::Request(Core::Http::HttpMethod::Put, url);
       request.SetHeader("x-ms-requires-sync", "true");
+      request.SetHeader("Content-Length", "0");
       for (const auto& p : options.Metadata)
       {
         request.SetHeader("x-ms-meta-" + p.first, p.second);
