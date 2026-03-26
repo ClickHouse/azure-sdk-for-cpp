@@ -423,7 +423,7 @@ namespace Azure { namespace Core { namespace Http {
       // IsEOF will also handle a connection that fail to complete an upload request.
       if (IsEOF() && m_keepAlive && !m_connectionUpgraded)
       {
-        _detail::CurlConnectionPool::g_curlConnectionPool.MoveConnectionBackToPool(
+        _detail::CurlConnectionPool::g_curlConnectionPool().MoveConnectionBackToPool(
             std::move(m_connection), m_httpKeepAlive);
       }
     }

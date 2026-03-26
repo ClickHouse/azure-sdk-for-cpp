@@ -199,31 +199,31 @@ static void CleanupThread()
   {
     // Won't continue until the ConnectionPoolMutex is released from MoveConnectionBackToPool
     std::unique_lock<std::mutex> lockForPoolCleaning(
-        CurlConnectionPool::g_curlConnectionPool.ConnectionPoolMutex);
+        CurlConnectionPool::g_curlConnectionPool().ConnectionPoolMutex);
 
     // Wait for the default time OR to the signal from the conditional variable.
     // wait_for releases the mutex lock when it goes to sleep and it takes the lock again when it
     // wakes up (or it's cancelled).
-    if (CurlConnectionPool::g_curlConnectionPool.ConditionalVariableForCleanThread.wait_for(
+    if (CurlConnectionPool::g_curlConnectionPool().ConditionalVariableForCleanThread.wait_for(
             lockForPoolCleaning,
             std::chrono::milliseconds(DefaultCleanerIntervalMilliseconds),
             []() {
-              return CurlConnectionPool::g_curlConnectionPool.ConnectionPoolIndex.size() == 0;
+              return CurlConnectionPool::g_curlConnectionPool().ConnectionPoolIndex.size() == 0;
             }))
     {
       // Cancelled by another thread or no connections on wakeup
-      CurlConnectionPool::g_curlConnectionPool.IsCleanThreadRunning = false;
+      CurlConnectionPool::g_curlConnectionPool().IsCleanThreadRunning = false;
       break;
     }
 
-    decltype(CurlConnectionPool::g_curlConnectionPool
+    decltype(CurlConnectionPool::g_curlConnectionPool()
                  .ConnectionPoolIndex)::mapped_type connectionsToBeCleaned;
 
     // loop the connection pool index - Note: lock is re-taken for the mutex
     // Notes: The size of each host-index is always expected to be greater than 0 because the
     // host-index is removed anytime it becomes empty.
-    for (auto index = CurlConnectionPool::g_curlConnectionPool.ConnectionPoolIndex.begin();
-         index != CurlConnectionPool::g_curlConnectionPool.ConnectionPoolIndex.end();)
+    for (auto index = CurlConnectionPool::g_curlConnectionPool().ConnectionPoolIndex.begin();
+         index != CurlConnectionPool::g_curlConnectionPool().ConnectionPoolIndex.end();)
     {
       // Each pool index behaves as a Last-in-First-out (connections are added to the pool with
       // push_front). The last connection moved to the pool will be the first to be re-used. Because
@@ -250,7 +250,7 @@ static void CleanupThread()
 
       if (connectionList.empty())
       {
-        index = CurlConnectionPool::g_curlConnectionPool.ConnectionPoolIndex.erase(index);
+        index = CurlConnectionPool::g_curlConnectionPool().ConnectionPoolIndex.erase(index);
       }
       else
       {
@@ -325,8 +325,6 @@ using Azure::Core::Http::Request;
 using Azure::Core::Http::TransportException;
 using Azure::Core::Http::_detail::CurlConnectionPool;
 
-Azure::Core::Http::_detail::CurlConnectionPool
-    Azure::Core::Http::_detail::CurlConnectionPool::g_curlConnectionPool;
 
 CurlTransport::CurlTransport(Azure::Core::Http::Policies::TransportOptions const& options)
     : CurlTransport(CurlTransportOptionsFromTransportOptions(options))
@@ -340,7 +338,7 @@ std::unique_ptr<RawResponse> CurlTransport::Send(Request& request, Context const
 
   auto session = std::make_unique<CurlSession>(
       request,
-      CurlConnectionPool::g_curlConnectionPool.ExtractOrCreateCurlConnection(request, m_options),
+      CurlConnectionPool::g_curlConnectionPool().ExtractOrCreateCurlConnection(request, m_options),
       m_options);
 
   CURLcode performing;
@@ -366,7 +364,7 @@ std::unique_ptr<RawResponse> CurlTransport::Send(Request& request, Context const
     // won't be no longer valid.
     session = std::make_unique<CurlSession>(
         request,
-        CurlConnectionPool::g_curlConnectionPool.ExtractOrCreateCurlConnection(
+        CurlConnectionPool::g_curlConnectionPool().ExtractOrCreateCurlConnection(
             request,
             m_options,
             getConnectionOpenIntent + 1 >= _detail::RequestPoolResetAfterConnectionFailed),
@@ -2176,7 +2174,7 @@ std::unique_ptr<CurlNetworkConnection> CurlConnectionPool::ExtractOrCreateCurlCo
   std::string const connectionKey = GetConnectionKey(hostDisplayName, options);
 
   {
-    decltype(CurlConnectionPool::g_curlConnectionPool
+    decltype(CurlConnectionPool::g_curlConnectionPool()
                  .ConnectionPoolIndex)::mapped_type connectionsToBeReset;
 
     // Critical section. Needs to own ConnectionPoolMutex before executing
@@ -2184,9 +2182,9 @@ std::unique_ptr<CurlNetworkConnection> CurlConnectionPool::ExtractOrCreateCurlCo
     std::unique_lock<std::mutex> lock(CurlConnectionPool::ConnectionPoolMutex);
 
     // get a ref to the pool from the map of pools
-    auto hostPoolIndex = g_curlConnectionPool.ConnectionPoolIndex.find(connectionKey);
+    auto hostPoolIndex = g_curlConnectionPool().ConnectionPoolIndex.find(connectionKey);
 
-    if (hostPoolIndex != g_curlConnectionPool.ConnectionPoolIndex.end()
+    if (hostPoolIndex != g_curlConnectionPool().ConnectionPoolIndex.end()
         && hostPoolIndex->second.size() > 0)
     {
       if (resetPool)
@@ -2210,7 +2208,7 @@ std::unique_ptr<CurlNetworkConnection> CurlConnectionPool::ExtractOrCreateCurlCo
         // Remove index if there are no more connections
         if (hostPoolIndex->second.size() == 0)
         {
-          g_curlConnectionPool.ConnectionPoolIndex.erase(hostPoolIndex);
+          g_curlConnectionPool().ConnectionPoolIndex.erase(hostPoolIndex);
         }
 
         Log::Write(Logger::Level::Verbose, LogMsgPrefix + "Re-using connection from the pool.");
@@ -2246,13 +2244,13 @@ void CurlConnectionPool::MoveConnectionBackToPool(
 
   Log::Write(Logger::Level::Verbose, "Moving connection to pool...");
 
-  decltype(CurlConnectionPool::g_curlConnectionPool
+  decltype(CurlConnectionPool::g_curlConnectionPool()
                .ConnectionPoolIndex)::mapped_type::value_type connectionToBeRemoved;
 
   // Lock mutex to access connection pool. mutex is unlock as soon as lock is out of scope
   std::unique_lock<std::mutex> lock(CurlConnectionPool::ConnectionPoolMutex);
   auto& poolId = connection->GetConnectionKey();
-  auto& hostPool = g_curlConnectionPool.ConnectionPoolIndex[poolId];
+  auto& hostPool = g_curlConnectionPool().ConnectionPoolIndex[poolId];
 
   if (hostPool.size() >= _detail::MaxConnectionsPerIndex && !hostPool.empty())
   {

@@ -60,7 +60,7 @@ namespace Azure { namespace Core { namespace Http { namespace _detail {
         {
           std::unique_lock<std::mutex> lock(ConnectionPoolMutex);
           // Remove all connections
-          g_curlConnectionPool.ConnectionPoolIndex.clear();
+          ConnectionPoolIndex.clear();
         }
         // Signal clean thread to wake up
         ConditionalVariableForCleanThread.notify_one();
@@ -115,9 +115,18 @@ namespace Azure { namespace Core { namespace Http { namespace _detail {
     // application finishes.
     std::condition_variable ConditionalVariableForCleanThread;
 
-    AZ_CORE_DLLEXPORT static Azure::Core::Http::_detail::CurlConnectionPool g_curlConnectionPool;
-
     bool IsCleanThreadRunning = false;
+
+    /// Lazy singleton accessor. The instance is constructed on first call,
+    /// deferring curl_global_init from static-init time to first use.
+    /// This avoids static initialization order issues with other global objects
+    /// (e.g. OpenSSL FIPS provider loaded during curl_global_init can race with
+    /// destructors of other file-scope globals under MemorySanitizer).
+    AZ_CORE_DLLEXPORT static CurlConnectionPool& g_curlConnectionPool()
+    {
+      static CurlConnectionPool instance;
+      return instance;
+    }
 
   private:
     // private constructor to keep this as singleton.
