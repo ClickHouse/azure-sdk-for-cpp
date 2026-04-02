@@ -11486,9 +11486,10 @@ namespace Azure { namespace Core { namespace Json { namespace _internal { namesp
     _azure_JSON_HEDLEY_PURE
     static char get_decimal_point() noexcept
     {
-      const auto* loc = localeconv();
-      _azure_JSON_ASSERT(loc != nullptr);
-      return (loc->decimal_point == nullptr) ? '.' : *(loc->decimal_point);
+      // ClickHouse always uses the C locale where the decimal point is '.'.
+      // localeconv() is non-thread-safe and is prohibited by ClickHouse's
+      // harmful function list in debug/sanitizer builds.
+      return '.';
     }
 
     /////////////////////
@@ -22257,15 +22258,12 @@ namespace Azure { namespace Core { namespace Json { namespace _internal { namesp
         output_adapter_t<char> s,
         const char ichar,
         error_handler_t error_handler_ = error_handler_t::strict)
-        : o(std::move(s)), loc(std::localeconv()),
-          thousands_sep(
-              loc->thousands_sep == nullptr
-                  ? '\0'
-                  : std::char_traits<char>::to_char_type(*(loc->thousands_sep))),
-          decimal_point(
-              loc->decimal_point == nullptr
-                  ? '\0'
-                  : std::char_traits<char>::to_char_type(*(loc->decimal_point))),
+        : o(std::move(s)), loc(nullptr),
+          thousands_sep('\0'),
+          decimal_point('.'),
+          // ClickHouse always uses the C locale: thousands_sep='\0', decimal_point='.'.
+          // localeconv() is non-thread-safe and is prohibited by ClickHouse's
+          // harmful function list in debug/sanitizer builds.
           indent_char(ichar), indent_string(512, indent_char), error_handler(error_handler_)
     {
     }
