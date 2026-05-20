@@ -3717,9 +3717,12 @@ namespace Azure { namespace Storage { namespace Blobs {
         response.Details.LastModified = DateTime::Parse(
             pRawResponse->GetHeaders().at("Last-Modified"), Azure::DateTime::DateFormat::Rfc1123);
       }
-      response.Details.CreatedOn = DateTime::Parse(
-          pRawResponse->GetHeaders().at("x-ms-creation-time"),
-          Azure::DateTime::DateFormat::Rfc1123);
+      if (pRawResponse->GetHeaders().count("x-ms-creation-time") != 0)
+      {
+        response.Details.CreatedOn = DateTime::Parse(
+            pRawResponse->GetHeaders().at("x-ms-creation-time"),
+            Azure::DateTime::DateFormat::Rfc1123);
+      }
       for (auto i = pRawResponse->GetHeaders().lower_bound("x-ms-meta-");
            i != pRawResponse->GetHeaders().end() && i->first.substr(0, 10) == "x-ms-meta-";
            ++i)
@@ -3763,7 +3766,10 @@ namespace Azure { namespace Storage { namespace Blobs {
         response.Details.SequenceNumber
             = std::stoll(pRawResponse->GetHeaders().at("x-ms-blob-sequence-number"));
       }
-      response.BlobType = Models::BlobType(pRawResponse->GetHeaders().at("x-ms-blob-type"));
+      if (pRawResponse->GetHeaders().count("x-ms-blob-type") != 0)
+      {
+        response.BlobType = Models::BlobType(pRawResponse->GetHeaders().at("x-ms-blob-type"));
+      }
       if (pRawResponse->GetHeaders().count("x-ms-copy-completion-time") != 0)
       {
         response.Details.CopyCompletedOn = DateTime::Parse(
@@ -3821,8 +3827,11 @@ namespace Azure { namespace Storage { namespace Blobs {
         response.Details.CommittedBlockCount
             = std::stoi(pRawResponse->GetHeaders().at("x-ms-blob-committed-block-count"));
       }
-      response.Details.IsServerEncrypted
-          = pRawResponse->GetHeaders().at("x-ms-server-encrypted") == std::string("true");
+      if (pRawResponse->GetHeaders().count("x-ms-server-encrypted") != 0)
+      {
+        response.Details.IsServerEncrypted
+            = pRawResponse->GetHeaders().at("x-ms-server-encrypted") == std::string("true");
+      }
       if (pRawResponse->GetHeaders().count("x-ms-encryption-key-sha256") != 0)
       {
         response.Details.EncryptionKeySha256 = Core::Convert::Base64Decode(
@@ -3995,9 +4004,12 @@ namespace Azure { namespace Storage { namespace Blobs {
         response.LastModified = DateTime::Parse(
             pRawResponse->GetHeaders().at("Last-Modified"), Azure::DateTime::DateFormat::Rfc1123);
       }
-      response.CreatedOn = DateTime::Parse(
-          pRawResponse->GetHeaders().at("x-ms-creation-time"),
-          Azure::DateTime::DateFormat::Rfc1123);
+      if (pRawResponse->GetHeaders().count("x-ms-creation-time") != 0)
+      {
+        response.CreatedOn = DateTime::Parse(
+            pRawResponse->GetHeaders().at("x-ms-creation-time"),
+            Azure::DateTime::DateFormat::Rfc1123);
+      }
       for (auto i = pRawResponse->GetHeaders().lower_bound("x-ms-meta-");
            i != pRawResponse->GetHeaders().end() && i->first.substr(0, 10) == "x-ms-meta-";
            ++i)
@@ -4009,7 +4021,10 @@ namespace Azure { namespace Storage { namespace Blobs {
         response.ObjectReplicationDestinationPolicyId
             = pRawResponse->GetHeaders().at("x-ms-or-policy-id");
       }
-      response.BlobType = Models::BlobType(pRawResponse->GetHeaders().at("x-ms-blob-type"));
+      if (pRawResponse->GetHeaders().count("x-ms-blob-type") != 0)
+      {
+        response.BlobType = Models::BlobType(pRawResponse->GetHeaders().at("x-ms-blob-type"));
+      }
       if (pRawResponse->GetHeaders().count("x-ms-copy-completion-time") != 0)
       {
         response.CopyCompletedOn = DateTime::Parse(
@@ -4103,8 +4118,11 @@ namespace Azure { namespace Storage { namespace Blobs {
         response.CommittedBlockCount
             = std::stoi(pRawResponse->GetHeaders().at("x-ms-blob-committed-block-count"));
       }
-      response.IsServerEncrypted
-          = pRawResponse->GetHeaders().at("x-ms-server-encrypted") == std::string("true");
+      if (pRawResponse->GetHeaders().count("x-ms-server-encrypted") != 0)
+      {
+        response.IsServerEncrypted
+            = pRawResponse->GetHeaders().at("x-ms-server-encrypted") == std::string("true");
+      }
       if (pRawResponse->GetHeaders().count("x-ms-encryption-key-sha256") != 0)
       {
         response.EncryptionKeySha256 = Core::Convert::Base64Decode(
@@ -5667,8 +5685,11 @@ namespace Azure { namespace Storage { namespace Blobs {
         response.LeaseStatus
             = Models::LeaseStatus(pRawResponse->GetHeaders().at("x-ms-lease-status"));
       }
-      response.IsServerEncrypted
-          = pRawResponse->GetHeaders().at("x-ms-server-encrypted") == std::string("true");
+      if (pRawResponse->GetHeaders().count("x-ms-server-encrypted") != 0)
+      {
+        response.IsServerEncrypted
+            = pRawResponse->GetHeaders().at("x-ms-server-encrypted") == std::string("true");
+      }
       return Response<Models::QueryBlobResult>(std::move(response), std::move(pRawResponse));
     }
     Response<std::map<std::string, std::string>> BlobClient::GetTags(
