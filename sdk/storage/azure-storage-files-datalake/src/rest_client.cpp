@@ -149,6 +149,7 @@ namespace Azure { namespace Storage { namespace Files { namespace DataLake {
         const Core::Context& context)
     {
       auto request = Core::Http::Request(Core::Http::HttpMethod::Put, url);
+      request.SetHeader("Content-Length", "0");
       if (options.RequestId.HasValue() && !options.RequestId.Value().empty())
       {
         request.SetHeader("x-ms-client-request-id", options.RequestId.Value());
