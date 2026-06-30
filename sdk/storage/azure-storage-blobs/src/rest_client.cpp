@@ -6597,7 +6597,10 @@ namespace Azure { namespace Storage { namespace Blobs {
       {
         response.ETag = ETag(pRawResponse->GetHeaders().at("ETag"));
       }
-      response.BlobSize = std::stoll(pRawResponse->GetHeaders().at("x-ms-blob-content-length"));
+      if (pRawResponse->GetHeaders().count("x-ms-blob-content-length") != 0)
+      {
+        response.BlobSize = std::stoll(pRawResponse->GetHeaders().at("x-ms-blob-content-length"));
+      }
       return Response<Models::_detail::GetPageRangesResult>(
           std::move(response), std::move(pRawResponse));
     }
@@ -6775,7 +6778,10 @@ namespace Azure { namespace Storage { namespace Blobs {
       {
         response.ETag = ETag(pRawResponse->GetHeaders().at("ETag"));
       }
-      response.BlobSize = std::stoll(pRawResponse->GetHeaders().at("x-ms-blob-content-length"));
+      if (pRawResponse->GetHeaders().count("x-ms-blob-content-length") != 0)
+      {
+        response.BlobSize = std::stoll(pRawResponse->GetHeaders().at("x-ms-blob-content-length"));
+      }
       return Response<Models::_detail::GetPageRangesDiffResult>(
           std::move(response), std::move(pRawResponse));
     }
